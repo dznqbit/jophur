@@ -9,6 +9,13 @@ jophur is coded in [CircuitPython](https://github.com/adafruit/circuitpython), w
 ## Hardware
 Developed on the [Adafruit Feather M4 Express](https://learn.adafruit.com/adafruit-feather-m4-express-atsamd51). Theoretically any Feather Express should work.
 
+### MIDI Environment
+Right now we have a hardcoded MIDI environment
+| Instrument | MIDI Channel |
+|-|-|
+| [Kiwi 106](https://www.kiwitechnics.com/kiwi-106.htm) | 1 |
+| [Big Sky](https://www.strymon.net/support/bigsky/) | 11 |
+
 # Development
 ## Getting Started
 - Install [Python 3](https://www.python.org/downloads/)
