@@ -56,6 +56,8 @@ song_program_data = {
     YOU_DIE: ((4, 81), 30)
 }
 
+
+
 # Rotary Encoder
 button = digitalio.DigitalInOut(board.A2)
 button.direction = digitalio.Direction.INPUT

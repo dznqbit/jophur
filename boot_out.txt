@@ -1,2 +1,2 @@
-Adafruit CircuitPython 7.2.0 on 2022-02-24; Adafruit Feather M4 Express with samd51j19
+Adafruit CircuitPython 7.2.3 on 2022-03-16; Adafruit Feather M4 Express with samd51j19
 Board ID:feather_m4_express
