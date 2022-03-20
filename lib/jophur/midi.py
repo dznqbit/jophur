@@ -45,6 +45,8 @@ def junoProgram(midi, bank, program):
     for change in changes:
         midi.send(change, channel)
 
+# program: HUMAN READABLE bank int, eg 0.
+#          TODO support strings like '00A'
 def reverbProgram(midi, program):
     channel = 10
 
