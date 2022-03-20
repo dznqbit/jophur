@@ -4,81 +4,84 @@ import neopixel
 import digitalio
 from jophur import display
 from jophur.midi import initMidi, playNote, reverbProgram, junoProgram
+from jophur.songs import songs, song_program_data
 
 midi = initMidi()
 
-# Data
-FORM_WITHOUT_MEANING = "Form Without Meaning"
-FUTURE_IS_GAY = "Future is Gay"
-BETTER_ANGELS = "Better Angels"
-BUILDING_THE_LABYRINTH = "Building the Labyrinth"
-INFINITE_LOOP = "Infinite Loop"
-CLUTTER = "Clutter"
-NOBODY_REALLY = "Nobody Really"
-FOLDING_IN_THIRDS = "Folding in 3rds"
-MOONLIGHT_TRIALS = "Moonlight Trials"
-SHUT_THE_WINDOWS = "Shut the Windows"
-COMPLICATED_FEELING = "Complicated Feeling"
-AUTUMNESQUE = "Autumnesque"
-YOU_DIE = "You Die"
-IN_SLOW_MOTION = "In Slow Motion"
+def sendPatchData(deps, song, patchIndex):
+    index = { "A": 0, "B": 1, "C": 2 }.get(patchIndex) or 0
 
-songs = [
-    FORM_WITHOUT_MEANING,
-    FUTURE_IS_GAY,
-    BETTER_ANGELS,
-    BUILDING_THE_LABYRINTH,
-    INFINITE_LOOP,
-    CLUTTER,
-    NOBODY_REALLY,
-    FOLDING_IN_THIRDS,
-    MOONLIGHT_TRIALS,
-    SHUT_THE_WINDOWS,
-    COMPLICATED_FEELING,
-    AUTUMNESQUE,
-    YOU_DIE,
-    IN_SLOW_MOTION,
-]
+    (midi, text_area) = deps
+    song_data = song_program_data.get(song)
+    print(f"{song} data {song_data}")
 
-song_program_data = {
-    FORM_WITHOUT_MEANING: ((4, 51), 12),
-    FUTURE_IS_GAY: ((4, 52), 27),
-    BETTER_ANGELS: ((4, 53), 15),
-    BUILDING_THE_LABYRINTH: ((4, 54), 21),
-    INFINITE_LOOP: ((4, 61), 33),
-    CLUTTER: ((4, 65), 24),
-    NOBODY_REALLY: ((4, 67), 6),
-    FOLDING_IN_THIRDS: ((4, 71), 3),
-    MOONLIGHT_TRIALS: ((4, 72), 18),
-    SHUT_THE_WINDOWS: ((4, 73), 36),
-    COMPLICATED_FEELING: ((4, 75), 0),
-    AUTUMNESQUE: ((4, 74), 9),
-    YOU_DIE: ((4, 81), 30)
+    if type(song_data) is list:
+        if len(song_data) == 0:
+            return
+
+        if len(song_data) > index:
+            patch_data = song_data[index]
+        else:
+            patch_data = song_data[len(song_data) - 1]
+    else:
+        patch_data = song_data
+
+    if (patch_data):
+        ((juno_bank, juno_program), reverb_program) = patch_data
+        print(f"{new_song}\n\tJuno {juno_program}\n\tReverb {reverb_program}");
+
+        junoProgram(midi, juno_bank, juno_program);
+        reverbProgram(midi, reverb_program);
+
+        text_area.text = f"{song}\n{patchIndex}";
+
+def new_button(pin):
+    button = digitalio.DigitalInOut(pin)
+    button.direction = digitalio.Direction.INPUT
+    button.pull = digitalio.Pull.UP
+    return button
+
+# Rotary Encoder button is broadboarded up on A2
+# OLED Featherwing has panel buttons on D9, D6, D5
+# https://learn.adafruit.com/adafruit-oled-featherwing/pinouts
+
+buttons = {
+    "Rotary": { "button": new_button(board.A2), "state": None },
+    "OLED_A": { "button": new_button(board.D9), "state": None },
+    "OLED_B": { "button": new_button(board.D6), "state": None },
+    "OLED_C": { "button": new_button(board.D5), "state": None },
 }
 
+noop = lambda: None
 
-
-# Rotary Encoder
-button = digitalio.DigitalInOut(board.A2)
-button.direction = digitalio.Direction.INPUT
-button.pull = digitalio.Pull.UP
-
-encoder = rotaryio.IncrementalEncoder(board.A4, board.A3)
+# Rotary Encoder input is broadboarded up on A3, A4
+encoder = rotaryio.IncrementalEncoder(board.A3, board.A4)
 position = encoder.position
 last_position = None
-button_state = None
-# END Rotary Encoder
 
 text_area = display.init()
 
 while True:
-    if not button.value and button_state is None:
-        button_state = "pressed"
-        text_area.text = f"{songs[position]}!"
-        print(text_area.text)
+    for button_key in buttons.keys():
+        button = buttons[button_key]["button"]
+        button_state = buttons[button_key]["state"]
 
-    if button.value and button_state == "pressed":
-        button_state = None
+        if not button.value and button_state is None:
+            buttons[button_key]["state"] = "pressed"
+
+            song = songs[position]
+            # match statement is not available on micropython
+            action = {
+                "OLED_A": lambda: sendPatchData((midi, text_area), song, "A"),
+                "OLED_B": lambda: sendPatchData((midi, text_area), song, "B"),
+                "OLED_C": lambda: sendPatchData((midi, text_area), song, "C")
+            }.get(button_key)
+
+            (action or noop)()
+            playNote(midi)
+
+        if button.value and button_state == "pressed":
+            buttons[button_key]["state"] = None
 
     position = encoder.position % len(songs)
     if last_position is None or position != last_position:
@@ -86,13 +89,5 @@ while True:
         text_area.text = f"{new_song}"
 
         song_data = song_program_data.get(new_song)
-        if (song_data):
-            ((juno_bank, juno_program), reverb_program) = song_data
-            print(f"{new_song}\n\tJuno {juno_program}\n\tReverb {reverb_program}");
-
-            junoProgram(midi, juno_bank, juno_program);
-            reverbProgram(midi, reverb_program);
-
-        playNote(midi)
 
     last_position = position

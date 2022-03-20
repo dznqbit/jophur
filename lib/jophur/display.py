@@ -28,7 +28,7 @@ def init():
         splash.append(clear_screen)
 
         text_area = label.Label(
-            terminalio.FONT, text=f"CATCHRABBIT v0.01", color=0xFFFF00, x=0, y=15
+            terminalio.FONT, text=f"CATCHRABBIT v0.01", color=0xFFFF00, x=0, y=10
         )
         splash.append(text_area)
         return text_area
