@@ -2,11 +2,23 @@ import rotaryio
 import board
 import neopixel
 import digitalio
+from time import sleep
+from math import floor
 from jophur import display
-from jophur.midi import initMidi, playNote, reverbProgram, junoProgram
+from jophur.midi import initMidi, playNote, reverbProgram, junoProgram, junoCC, KiwiCC
 from jophur.songs import songs, song_program_data
 
-midi = initMidi()
+import board
+from analogio import AnalogIn
+
+analog_in = AnalogIn(board.A0)
+
+def get_voltage(pin):
+    return (pin.value / 65536) * pin.reference_voltage
+
+last_voltage = None
+
+midi = initMidi(listen=False)
 
 def sendPatchData(deps, song, patchIndex):
     index = { "A": 0, "B": 1, "C": 2 }.get(patchIndex) or 0
@@ -28,7 +40,7 @@ def sendPatchData(deps, song, patchIndex):
 
     if (patch_data):
         ((juno_bank, juno_program), reverb_program) = patch_data
-        print(f"{new_song}\n\tJuno {juno_program}\n\tReverb {reverb_program}");
+        print(f"{song}\n\tJuno {juno_program}\n\tReverb {reverb_program}");
 
         junoProgram(midi, juno_bank, juno_program);
         reverbProgram(midi, reverb_program);
@@ -62,6 +74,16 @@ last_position = None
 text_area = display.init()
 
 while True:
+    sleep(0.0005)
+
+    voltage = (get_voltage(analog_in))
+    if last_voltage and (abs(voltage - last_voltage) > 0.02):
+        # print((voltage,))
+        cc_val = floor(127.0 * voltage / 3.3)
+        print((cc_val,))
+        junoCC(midi, KiwiCC.INTERNAL_CLOCK_RATE, cc_val)
+    last_voltage = voltage
+
     for button_key in buttons.keys():
         button = buttons[button_key]["button"]
         button_state = buttons[button_key]["state"]
