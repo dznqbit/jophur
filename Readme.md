@@ -23,7 +23,7 @@ Developed on the [Adafruit Feather M4 Express](https://learn.adafruit.com/adafru
 | 9 | `board.D9` | OLED C Button |
 | 10 | `board.D10` | Button A |
 | 11 | `board.D11` | Button B |
-| 11 | `board.D12` | Button C |
+| 12 | `board.D12` | Button C |
 | 13 | `board.D13` | Button LED C |
 | TX | `board.TX` | Midi Send |
 | RX | `board.RX` | Midi Receive (disabled?) |
