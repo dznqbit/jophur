@@ -14,7 +14,6 @@ from adafruit_midi.midi_message import MIDIUnknownEvent
 from adafruit_midi.program_change import ProgramChange
 
 def initMidi(listen: True):
-
     uart = busio.UART(
         board.TX,
         board.RX if listen else None,

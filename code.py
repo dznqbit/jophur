@@ -2,13 +2,14 @@ import rotaryio
 import board
 import neopixel
 import digitalio
+from analogio import AnalogIn
+
 from time import sleep, time
 from math import floor
+
 from jophur import display
 from jophur.midi import initMidi, playNote, reverbProgram, junoProgram, junoCC, KiwiCC
 from jophur.songs import songs, song_program_data
-import board
-from analogio import AnalogIn
 
 # EXPRESSION PEDAL
 analog_in = AnalogIn(board.A0)
