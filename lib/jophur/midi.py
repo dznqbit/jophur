@@ -32,7 +32,8 @@ def initMidi(listen: True):
 
 def junoCC(midi, cc, value):
     channel = 0
-    change = ControlChange(cc, value)                # Kiwi 106:
+    change = ControlChange(cc, value)
+    #print(f"MIDI {cc} {value}")
     midi.send(change, channel)
 
 # bank:     HUMAN READABLE bank int, eg 1
@@ -61,8 +62,8 @@ class Enum(object):
             setattr(self, name, number)
 
 class KiwiCC(Enum):
-    MOD_WHEEL_AMOUNT = 01
-    VOLUME = 07
+    MOD_WHEEL_AMOUNT = 1
+    VOLUME = 7
 
     DCO_PWM_MOD_AMOUNT = 10
     DCO_LFO_MOD_AMOUNT = 12

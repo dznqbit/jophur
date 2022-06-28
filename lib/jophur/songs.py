@@ -93,6 +93,6 @@ song_program_data = {
 
     YOU_DIE: [
         ((4, 81), 30), # Organ
-        ((4, 81), 30)  # Da randomizer
+        ((4, 82), 30)  # Da randomizer
     ]
 }
