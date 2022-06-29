@@ -37,7 +37,9 @@ songs = [
 
 # [(((Juno Bank, Juno Patch), Big Sky Patch), (B), (C)],
 song_program_data = {
-    AUTUMNESQUE: ((4, 74), 9),
+    AUTUMNESQUE: [
+        ((4, 74), 9)   # autumnesque
+    ],
 
     BETTER_ANGELS: [
         ((4, 53), 15), # big square, tight room delay
