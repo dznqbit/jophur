@@ -1,6 +1,5 @@
 # jophur/songs.py
 
-# Song Names
 FORM_WITHOUT_MEANING = "Form Without Meaning"
 FUTURE_IS_GAY = "Future is Gay"
 BETTER_ANGELS = "Better Angels"
@@ -33,68 +32,79 @@ songs = [
     IN_SLOW_MOTION,
 ]
 
-# Program Data
+class PatchData:
+    def __init__(self, juno=None, reverb=None, exp=None):
+        self.juno_program = juno
+        self.reverb_program = reverb
+        self.expression = exp
 
-# [(((Juno Bank, Juno Patch), Big Sky Patch), (B), (C)],
+    def __repr__(self):
+        return f'juno={self.juno_program} reverb={self.reverb_program} expression={self.expression}'
+
+PD = PatchData
+
 song_program_data = {
     AUTUMNESQUE: [
-        ((4, 74), 9)   # autumnesque
+        PD(
+            juno=(4, 74),
+            reverb=9,
+        )
     ],
 
     BETTER_ANGELS: [
-        ((4, 53), 15), # big square, tight room delay
-        ((4, 53), 16)  # big square, shimmer
+        PD(juno=(4, 53), reverb=15), # big square, tight room delay
+        PD(juno=(4, 53), reverb=16)  # big square, shimmer
     ],
 
     BUILDING_THE_LABYRINTH: [
-        ((4, 54), 21), # Long attack, magneto
-        ((4, 55), 22), # Stairway flutes, plate
-        ((4, 57), 23)  # Scary chorus'd alien, big bloom
+        PD(juno=(4, 54), reverb=21), # Long attack, magneto
+        PD(juno=(4, 55), reverb=22), # Stairway flutes, plate
+        PD(juno=(4, 57), reverb=23)  # Scary chorus'd alien, big bloom
     ],
 
     CLUTTER: [
-        ((4, 65), 24), # Soft sawtooth with nonlin
-        ((4, 66), 25), # Squarewave + long LFO delay, plate
+        PD(juno=(4, 65), reverb=24), # Soft sawtooth with nonlin
+        PD(juno=(4, 66), reverb=25), # Squarewave + long LFO delay, plate
     ],
 
     COMPLICATED_FEELING: [
-        ((4, 75), 0),  # phasey high rez,
-        ((4, 75), 0),  # thou swelst,
+        PD(juno=(4, 75), reverb=0),  # phasey high rez,
+        PD(juno=(4, 75), reverb=0),  # thou swelst,
     ],
 
     FOLDING_IN_THIRDS: [
-        ((4, 71), 3),  # Nasal
+        PD(juno=(4, 71), reverb=3),  # Nasal
     ],
 
     FORM_WITHOUT_MEANING: [
-        ((4, 51), 12), # nasal tenor, tight little plate
-        ((4, 51), 13)  # Long pre-delay big reverb for ending
+        PD(juno=(4, 51), reverb=12), # nasal tenor, tight little plate
+        PD(juno=(4, 51), reverb=13)  # Long pre-delay big reverb for ending
     ],
 
     FUTURE_IS_GAY: [
-        ((4, 52), 27), # future is gay
+        PD(juno=(4, 52), reverb=27), # future is gay
     ],
 
     INFINITE_LOOP: [
-        ((4, 61), 33), # big attack hissy fit, shimmer
-        ((4, 62), 33), # tight attack "closer" rip, lil' spring
-        ((4, 63), 33), # random pitch crazy laboratory
+        PD(juno=(4, 61), reverb=33), # big attack hissy fit, shimmer
+        PD(juno=(4, 62), reverb=33), # tight attack "closer" rip, lil' spring
+        PD(juno=(4, 63), reverb=33), # random pitch crazy laboratory
     ],
 
     MOONLIGHT_TRIALS: [
-        ((4, 72), 18), # moonlight trials
+        PD(juno=(4, 72), reverb=18), # moonlight trials
     ],
 
     NOBODY_REALLY: [
-        ((4, 67), 6),  # Softer thing
+        PD(juno=(4, 67), reverb=6),  # Softer thing
     ],
 
     SHUT_THE_WINDOWS: [
-        ((4, 73), 36), # shut the windows
+        PD(juno=(4, 73), reverb=36), # shut the windows
     ],
 
     YOU_DIE: [
-        ((4, 81), 30), # Organ
-        ((4, 82), 30)  # Da randomizer
+        PD(juno=(4, 81), reverb=30), # Organ
+        PD(juno=(4, 82), reverb=30)  # Da randomizer
     ]
 }

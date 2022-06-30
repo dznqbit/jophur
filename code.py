@@ -1,15 +1,11 @@
-import rotaryio
 import board
-import neopixel
 import digitalio
 from analogio import AnalogIn
 import asyncio
-import countio
-import keypad
 
 from time import sleep, time
 from math import floor
-from lib.jophur.interface import KNOB, BUTTON, UP, Listener, monitor_buttons, monitor_rotary_encoder
+from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
 from lib.jophur import buttons, display, songs, midi
 
 def new_led(pin):
@@ -17,9 +13,6 @@ def new_led(pin):
     led.direction = digitalio.Direction.OUTPUT
 
     return led
-
-def flatten(xss):
-    return [x for xs in xss for x in xs]
 
 class Jophur:
     def __init__(self, setlist):
@@ -30,8 +23,8 @@ class Jophur:
         self.current_patch_song_index = 0
         self.current_patch_index = 0
 
-        self.midi = midi.initMidi(listen=False)
-        self.text_area = display.init()
+        self.midi = midi.JophurMidi()
+        self.text_area = display.init(f"CATCHRABBIT v0.01")
         self.button_leds = [new_led(pin) for pin in [board.A5, board.D4, board.D13]]
     
     def selected_song_name(self):
@@ -72,28 +65,20 @@ def get_vbat_voltage(pin):
     return (pin.value * 3.3) / 65536 * 2
 ##### END BATTERY STUFF ###
 
-### MIDI ###
-def send_patch_midi(jophur, patch_data):
-    ((juno_bank, juno_program), reverb_program) = patch_data
-    print(f"MIDI\n\tJuno {juno_program}\n\tReverb {reverb_program}")
-
-    midi.junoProgram(jophur.midi, juno_bank, juno_program)
-    midi.reverbProgram(jophur.midi, reverb_program)
-
-### END MIDI ###
 async def jophur_event_loop(jophur, listener):
     while True:
         if len(listener.events) > 0:
             (event_name, event_data) = listener.events.pop(0)
 
             if event_name == KNOB:
-                song = jophur.select_next_song() if event_data == UP else jophur.select_previous_song()
+                song = jophur.select_next_song() if event_data == KNOB_UP else jophur.select_previous_song()
                 jophur.text_area.text = song
 
             if event_name == BUTTON:
                 button = event_data
                 if button == buttons.ROTARY:
                     v = get_vbat_voltage(vbat_voltage)
+
                     # Fully charge: 3.92
                     print("VBat voltage: {:.2f}".format(v))
                     jophur.text_area.text = "VBat voltage: {:.2f}".format(v)
@@ -108,9 +93,15 @@ async def jophur_event_loop(jophur, listener):
                         continue
                     
                     (song, patch_index, patch_data) = selected_patch
+                    
                     print(song, patch_index, "send midi", patch_data)
-                    send_patch_midi(jophur, patch_data)
+                    jophur.midi.junoProgram(patch_data.juno_program[0], patch_data.juno_program[1])
+                    jophur.midi.reverbProgram(patch_data.reverb_program)
             
+            if event_name == PEDAL:
+                print("woah pedal", event_data)
+                # jophur.midi.junoCC()
+
             # Update LEDs
             for i in range(0, len(jophur.button_leds)):
                 jophur.button_leds[i].value = jophur.current_patch_index == i and \
@@ -135,7 +126,8 @@ async def main():
     await asyncio.gather(
         asyncio.create_task(monitor_buttons(listener)),
         asyncio.create_task(monitor_rotary_encoder(listener)),
-        asyncio.create_task(jophur_event_loop(jophur, listener))
+        asyncio.create_task(monitor_pedal(listener)),
+        asyncio.create_task(jophur_event_loop(jophur, listener)),
     )
 
 asyncio.run(main())
