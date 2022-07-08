@@ -1,4 +1,5 @@
 # jophur/songs.py
+from jophur import midi
 
 FORM_WITHOUT_MEANING = "Form Without Meaning"
 FUTURE_IS_GAY = "Future is Gay"
@@ -48,6 +49,7 @@ song_program_data = {
         PD(
             juno=(4, 74),
             reverb=9,
+            exp=(midi.KIWI_CC_DCO_LFO_MOD_AMOUNT, 0, 20)
         )
     ],
 

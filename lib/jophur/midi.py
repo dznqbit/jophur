@@ -17,17 +17,15 @@ from lib.jophur.enum import Enum
 
 class JophurMidi:
     def __init__(self):
-        uart = busio.UART(board.TX, None, baudrate=31250, timeout=0.001)
         self.juno_channel = 0
-        self.reverb_channel = 0
+        self.reverb_channel = 10
         self.midi = adafruit_midi.MIDI(
-            midi_in=None,
-            midi_out=uart,
+            midi_out=busio.UART(board.TX, None, baudrate=31250, timeout=0.001),
             in_channel=0,
             out_channel=0,
             debug=False
         )
-    
+
     # bank:     HUMAN READABLE bank int, eg 1
     # program:  HUMAN READABLE program number int, eg 71
     def junoProgram(self, bank, program):
@@ -45,34 +43,33 @@ class JophurMidi:
 
         for change in changes:
             self.midi.send(change, self.juno_channel)
-    
+
     # program: HUMAN READABLE bank int, eg 0.
     # TODO support strings like '00 A'
     def reverbProgram(self, program):
         self.midi.send(ProgramChange(program), self.reverb_channel)
-    
+
     def junoCC(self, cc, value):
         change = ControlChange(cc, value)
         self.midi.send(change, self.juno_channel)
 
-class KiwiCC(Enum):
-    MOD_WHEEL_AMOUNT = 1
-    VOLUME = 7
+KIWI_CC_MOD_WHEEL_AMOUNT = 1
+KIWI_CC_VOLUME = 7
 
-    DCO_PWM_MOD_AMOUNT = 10
-    DCO_LFO_MOD_AMOUNT = 12
+KIWI_CC_DCO_PWM_MOD_AMOUNT = 10
+KIWI_CC_DCO_LFO_MOD_AMOUNT = 12
 
-    LFO_1_RATE = 19
-    LFO_1_DELAY = 20
+KIWI_CC_LFO_1_RATE = 19
+KIWI_CC_LFO_1_DELAY = 20
 
-    LFO_2_RATE = 22
-    LFO_2_DELAY = 23
+KIWI_CC_LFO_2_RATE = 22
+KIWI_CC_LFO_2_DELAY = 23
 
-    LOW_PASS_CUTOFF_FREQ = 41
-    LOW_PASS_Q = 42
-    LOW_PASS_LFO_AMOUNT = 45
+KIWI_CC_LOW_PASS_CUTOFF_FREQ = 41
+KIWI_CC_LOW_PASS_Q = 42
+KIWI_CC_LOW_PASS_LFO_AMOUNT = 45
 
-    INTERNAL_CLOCK_RATE=72
+KIWI_CC_INTERNAL_CLOCK_RATE=72
 
 def playNote(midi):
     midi.send(NoteOn(48, 20))   # play note

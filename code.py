@@ -5,6 +5,8 @@ import asyncio
 
 from time import sleep, time
 from math import floor
+from lib.jophur.util import lerp
+
 from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
 from lib.jophur import buttons, display, songs, midi
 
@@ -24,9 +26,9 @@ class Jophur:
         self.current_patch_index = 0
 
         self.midi = midi.JophurMidi()
-        self.text_area = display.init(f"CATCHRABBIT v0.01")
+        self.text_area = display.init(f"Jophur v0.2")
         self.button_leds = [new_led(pin) for pin in [board.A5, board.D4, board.D13]]
-    
+
     def selected_song_name(self):
         return self.songs[self.selected_song_index]
 
@@ -37,19 +39,19 @@ class Jophur:
     def select_previous_song(self):
         self.selected_song_index = (len(self.songs) + self.selected_song_index - 1) % len(self.songs)
         return self.selected_song_name()
-    
+
     def current_patch_data(self):
         current_song_name = self.songs[self.current_patch_song_index]
 
         return (
-            current_song_name, 
-            self.current_patch_index, 
+            current_song_name,
+            self.current_patch_index,
             self.song_program_data[current_song_name][self.current_patch_index]
         )
 
     def set_current_patch(self, song_name, patch_index):
         song_data = self.song_program_data[song_name]
-        
+
         if song_data is None or len(song_data) <= patch_index:
             return None
 
@@ -81,26 +83,33 @@ async def jophur_event_loop(jophur, listener):
 
                     # Fully charge: 3.92
                     print("VBat voltage: {:.2f}".format(v))
-                    jophur.text_area.text = "VBat voltage: {:.2f}".format(v)
+                    # jophur.text_area.text = "VBat voltage: {:.2f}".format(v)
+                    jophur.text_area.text = ""
 
                 if button in [buttons.A, buttons.B, buttons.C]:
                     selected_patch = jophur.set_current_patch(
-                        jophur.selected_song_name(), 
+                        jophur.selected_song_name(),
                         [buttons.A, buttons.B, buttons.C].index(button)
                     )
 
                     if selected_patch is None:
                         continue
-                    
+
                     (song, patch_index, patch_data) = selected_patch
-                    
+
                     print(song, patch_index, "send midi", patch_data)
                     jophur.midi.junoProgram(patch_data.juno_program[0], patch_data.juno_program[1])
                     jophur.midi.reverbProgram(patch_data.reverb_program)
-            
+
             if event_name == PEDAL:
-                print("woah pedal", event_data)
-                # jophur.midi.junoCC()
+                selected_patch = jophur.current_patch_data()
+                (_, _, patch_data) = selected_patch
+                if patch_data.expression:
+                    (exp_cc, exp_lo, exp_hi) = patch_data.expression
+                    jophur.midi.junoCC(
+                        exp_cc,
+                        floor(lerp(event_data, exp_lo, exp_hi))
+                    )
 
             # Update LEDs
             for i in range(0, len(jophur.button_leds)):
