@@ -8,7 +8,7 @@ import adafruit_displayio_ssd1306
 class MockText:
     text: "hello"
 
-def init():
+def init(init_text):
     try:
         displayio.release_displays()
 
@@ -28,7 +28,7 @@ def init():
         splash.append(clear_screen)
 
         text_area = label.Label(
-            terminalio.FONT, text=f"CATCHRABBIT v0.01", color=0xFFFF00, x=0, y=10
+            terminalio.FONT, text=init_text, color=0xFFFF00, x=0, y=10
         )
         splash.append(text_area)
         return text_area

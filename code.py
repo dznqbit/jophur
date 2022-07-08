@@ -1,173 +1,156 @@
-import rotaryio
 import board
-import neopixel
 import digitalio
 from analogio import AnalogIn
+import asyncio
 
 from time import sleep, time
 from math import floor
+from lib.jophur.util import lerp
 
-from jophur import display
-from jophur.midi import initMidi, playNote, reverbProgram, junoProgram, junoCC, KiwiCC
-from jophur.songs import songs, song_program_data
+from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
+from lib.jophur import buttons, display, songs, midi
 
-# EXPRESSION PEDAL
-analog_in = AnalogIn(board.A0)
-vbat_voltage = AnalogIn(board.VOLTAGE_MONITOR)
-
-def get_voltage(pin):
-    return (pin.value / 65536) * pin.reference_voltage
-
-def get_vbat_voltage(pin):
-    return (pin.value * 3.3) / 65536 * 2
-
-last_voltage = None
-
-# BUTTONS
-def new_button(pin):
-    button = digitalio.DigitalInOut(pin)
-    button.direction = digitalio.Direction.INPUT
-    button.pull = digitalio.Pull.UP
-    return button
-
-buttons = {
-    "Rotary": { "button": new_button(board.A2), "state": None },
-    "OLED_A": { "button": new_button(board.D9), "state": None },
-    "OLED_B": { "button": new_button(board.D6), "state": None },
-    "OLED_C": { "button": new_button(board.D5), "state": None },
-    "A":      { "button": new_button(board.D10), "state": None },
-    "B":      { "button": new_button(board.D11), "state": None },
-    "C":      { "button": new_button(board.D12), "state": None },
-}
-
-# KNOB
-encoder = rotaryio.IncrementalEncoder(board.A3, board.A4)
-position = encoder.position
-last_position = None
-
-# OUTPUTS
-
-# TEXT AREA
-text_area = display.init()
-
-# LEDS
 def new_led(pin):
     led = digitalio.DigitalInOut(pin)
     led.direction = digitalio.Direction.OUTPUT
 
-    return led;
+    return led
 
-leds = {
-    "A": new_led(board.A5),
-    "B": new_led(board.D4),
-    "C": new_led(board.D13),
-}
+class Jophur:
+    def __init__(self, setlist):
+        self.songs = setlist
+        self.song_program_data = songs.song_program_data
 
-def selectLed(index):
-    for key in leds:
-        leds[key].value = index == key
+        self.selected_song_index = 0
+        self.current_patch_song_index = 0
+        self.current_patch_index = 0
 
-# MIDI
-midi = initMidi(listen=False)
+        self.midi = midi.JophurMidi()
+        self.text_area = display.init(f"Jophur v0.2")
+        self.button_leds = [new_led(pin) for pin in [board.A5, board.D4, board.D13]]
 
-last_input_at = time()
+    def selected_song_name(self):
+        return self.songs[self.selected_song_index]
 
-REALTIME = 0.0005
-SLEEP = 0.5
+    def select_next_song(self):
+        self.selected_song_index = (self.selected_song_index + 1) % len(self.songs)
+        return self.selected_song_name()
 
-def lights_out():
-    text_area.text = ""
-    for led in leds:
-        leds[led].value = False
+    def select_previous_song(self):
+        self.selected_song_index = (len(self.songs) + self.selected_song_index - 1) % len(self.songs)
+        return self.selected_song_name()
 
-sleep_interval = REALTIME
+    def current_patch_data(self):
+        current_song_name = self.songs[self.current_patch_song_index]
 
-def logBattery():
-    v = get_vbat_voltage(vbat_voltage);
-    # Fully charge: 3.92
-    print("VBat voltage: {:.2f}".format(v))
+        return (
+            current_song_name,
+            self.current_patch_index,
+            self.song_program_data[current_song_name][self.current_patch_index]
+        )
 
-def sendPatchData(deps, song, patchIndex):
-    index = { "A": 0, "B": 1, "C": 2 }.get(patchIndex) or 0
+    def set_current_patch(self, song_name, patch_index):
+        song_data = self.song_program_data[song_name]
 
-    (midi, text_area) = deps
-    song_data = song_program_data.get(song)
-    print(f"{song} data {song_data}")
+        if song_data is None or len(song_data) <= patch_index:
+            return None
 
-    if type(song_data) is list:
-        if len(song_data) == 0:
-            return
+        self.current_patch_index = patch_index
+        self.current_patch_song_index = self.selected_song_index
 
-        if len(song_data) > index:
-            patch_data = song_data[index]
-        else:
-            patch_data = song_data[len(song_data) - 1]
-    else:
-        patch_data = song_data
+        return self.current_patch_data()
 
-    if (patch_data):
-        ((juno_bank, juno_program), reverb_program) = patch_data
-        print(f"{song}\n\tJuno {juno_program}\n\tReverb {reverb_program}");
+### BATTERY STUFF ###
+vbat_voltage = AnalogIn(board.VOLTAGE_MONITOR)
 
-        junoProgram(midi, juno_bank, juno_program);
-        reverbProgram(midi, reverb_program);
+def get_vbat_voltage(pin):
+    return (pin.value * 3.3) / 65536 * 2
+##### END BATTERY STUFF ###
 
-        text_area.text = f"{song}\n{patchIndex}";
-        selectLed(patchIndex);
+async def turn_screen_off(jophur):
+    await asyncio.sleep(30) # seconds
 
-while True:
-    # Sleep display after
-    if sleep_interval == REALTIME and time() - last_input_at > 5:
-        sleep_interval = SLEEP
-        lights_out()
+    for i in range(0, len(jophur.button_leds)):
+        jophur.button_leds[i].value = 0
 
-    if sleep_interval == SLEEP and time() - last_input_at < 5:
-        sleep_interval = REALTIME
-        text_area.text = songs[encoder.position % len(songs)]
+    jophur.text_area.text = ""
 
 
-    sleep(sleep_interval)
 
-    voltage = (get_voltage(analog_in))
+async def jophur_event_loop(jophur, listener):
+    asyncio.create_task(turn_screen_off(jophur))
 
-    if last_voltage and (abs(voltage - last_voltage) > 0.02):
-#        print((voltage,))
-        cc_val = floor(127.0 * voltage / 3.3)
-#        print((cc_val,))
-        junoCC(midi, KiwiCC.LOW_PASS_CUTOFF_FREQ, cc_val)
+    while True:
+        if len(listener.events) > 0:
+            (event_name, event_data) = listener.events.pop(0)
 
-    last_voltage = voltage
+            if event_name == KNOB:
+                song = jophur.select_next_song() if event_data == KNOB_UP else jophur.select_previous_song()
+                jophur.text_area.text = song
 
-    for button_key in buttons.keys():
-        button = buttons[button_key]["button"]
-        button_state = buttons[button_key]["state"]
+            if event_name == BUTTON:
+                button = event_data
+                if button == buttons.ROTARY:
+                    v = get_vbat_voltage(vbat_voltage)
 
-        if not button.value and button_state is None:
-            last_input_at = time()
-            buttons[button_key]["state"] = "pressed"
-            song = songs[position]
+                    # Fully charge: 3.92
+                    print("VBat voltage: {:.2f}".format(v))
+                    # jophur.text_area.text = "VBat voltage: {:.2f}".format(v)
+                    jophur.text_area.text = ""
 
-            action = {
-                "OLED_A": lambda: sendPatchData((midi, text_area), song, "A"),
-                "A": lambda: sendPatchData((midi, text_area), song, "A"),
-                "OLED_B": lambda: sendPatchData((midi, text_area), song, "B"),
-                "B": lambda: sendPatchData((midi, text_area), song, "B"),
-                "OLED_C": lambda: sendPatchData((midi, text_area), song, "C"),
-                "C": lambda: sendPatchData((midi, text_area), song, "C"),
-                "Rotary": lambda: logBattery()
-            }.get(button_key)
+                if button in [buttons.A, buttons.B, buttons.C]:
+                    selected_patch = jophur.set_current_patch(
+                        jophur.selected_song_name(),
+                        [buttons.A, buttons.B, buttons.C].index(button)
+                    )
 
-            if action:
-                action()
+                    if selected_patch is None:
+                        continue
 
-        if button.value and button_state == "pressed":
-            buttons[button_key]["state"] = None
+                    (song, patch_index, patch_data) = selected_patch
 
-    position = encoder.position % len(songs)
-    if last_position is None or position != last_position:
-        last_input_at = time()
-        new_song = songs[position]
-        text_area.text = f"{new_song}"
-        song_data = song_program_data.get(new_song)
+                    print(song, patch_index, "send midi", patch_data)
+                    jophur.midi.junoProgram(patch_data.juno_program[0], patch_data.juno_program[1])
+                    jophur.midi.reverbProgram(patch_data.reverb_program)
 
-    last_position = position
+            if event_name == PEDAL:
+                selected_patch = jophur.current_patch_data()
+                (_, _, patch_data) = selected_patch
+                if patch_data.expression:
+                    (exp_cc, exp_lo, exp_hi) = patch_data.expression
+                    jophur.midi.junoCC(
+                        exp_cc,
+                        floor(lerp(event_data, exp_lo, exp_hi))
+                    )
+            else:
+                asyncio.create_task(turn_screen_off(jophur))
+
+                # Update LEDs
+                for i in range(0, len(jophur.button_leds)):
+                    jophur.button_leds[i].value = jophur.current_patch_index == i and \
+                        jophur.selected_song_index == jophur.current_patch_song_index
+
+        await asyncio.sleep(0)
+
+async def main():
+    jophur = Jophur([
+        songs.BETTER_ANGELS,
+        songs.FOLDING_IN_THIRDS,
+        songs.MOONLIGHT_TRIALS,
+        songs.BUILDING_THE_LABYRINTH,
+        songs.NOBODY_REALLY,
+        songs.FUTURE_IS_GAY,
+        songs.AUTUMNESQUE,
+        songs.YOU_DIE
+    ])
+
+    listener = Listener()
+
+    await asyncio.gather(
+        asyncio.create_task(monitor_buttons(listener)),
+        asyncio.create_task(monitor_rotary_encoder(listener)),
+        asyncio.create_task(monitor_pedal(listener)),
+        asyncio.create_task(jophur_event_loop(jophur, listener)),
+    )
+
+asyncio.run(main())

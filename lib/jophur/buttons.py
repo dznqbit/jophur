@@ -1,0 +1,7 @@
+A = "A"
+B = "B"
+C = "C"
+OLED_A = "OLED_A"
+OLED_B = "OLED_B"
+OLED_C = "OLED_C"
+ROTARY = "ROTARY"
