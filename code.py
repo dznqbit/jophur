@@ -67,7 +67,19 @@ def get_vbat_voltage(pin):
     return (pin.value * 3.3) / 65536 * 2
 ##### END BATTERY STUFF ###
 
+async def turn_screen_off(jophur):
+    await asyncio.sleep(30) # seconds
+
+    for i in range(0, len(jophur.button_leds)):
+        jophur.button_leds[i].value = 0
+
+    jophur.text_area.text = ""
+
+
+
 async def jophur_event_loop(jophur, listener):
+    asyncio.create_task(turn_screen_off(jophur))
+
     while True:
         if len(listener.events) > 0:
             (event_name, event_data) = listener.events.pop(0)
@@ -110,11 +122,13 @@ async def jophur_event_loop(jophur, listener):
                         exp_cc,
                         floor(lerp(event_data, exp_lo, exp_hi))
                     )
+            else:
+                asyncio.create_task(turn_screen_off(jophur))
 
-            # Update LEDs
-            for i in range(0, len(jophur.button_leds)):
-                jophur.button_leds[i].value = jophur.current_patch_index == i and \
-                    jophur.selected_song_index == jophur.current_patch_song_index
+                # Update LEDs
+                for i in range(0, len(jophur.button_leds)):
+                    jophur.button_leds[i].value = jophur.current_patch_index == i and \
+                        jophur.selected_song_index == jophur.current_patch_song_index
 
         await asyncio.sleep(0)
 
