@@ -7,7 +7,7 @@ from time import sleep, time
 from math import floor
 from lib.jophur.util import lerp
 
-from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
+from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, KNOB_DOWN, Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
 from lib.jophur import buttons, display, songs, midi
 
 def new_led(pin):
@@ -79,14 +79,28 @@ async def turn_screen_off(jophur):
 
 async def jophur_event_loop(jophur, listener):
     asyncio.create_task(turn_screen_off(jophur))
+    last_knob_events = []
 
     while True:
         if len(listener.events) > 0:
             (event_name, event_data) = listener.events.pop(0)
 
             if event_name == KNOB:
-                song = jophur.select_next_song() if event_data == KNOB_UP else jophur.select_previous_song()
-                jophur.text_area.text = song
+                if len(last_knob_events) > 3:
+                    last_knob_events.remove(last_knob_events[0])
+
+                last_knob_events.append(event_data)
+                
+                if len(last_knob_events) > 1:
+                    if (all(e == KNOB_UP for e in last_knob_events)):
+                        song = jophur.select_next_song()
+                        jophur.text_area.text = song
+
+                    if (all(e == KNOB_DOWN for e in last_knob_events)):
+                        song = jophur.select_previous_song()
+                        jophur.text_area.text = song
+
+                    last_knob_events.clear()
 
             if event_name == BUTTON:
                 button = event_data
@@ -132,18 +146,23 @@ async def jophur_event_loop(jophur, listener):
 
         await asyncio.sleep(0)
 
-async def main():
-    jophur = Jophur([
-        songs.BETTER_ANGELS,
-        songs.FOLDING_IN_THIRDS,
-        songs.MOONLIGHT_TRIALS,
-        songs.BUILDING_THE_LABYRINTH,
-        songs.NOBODY_REALLY,
-        songs.FUTURE_IS_GAY,
-        songs.AUTUMNESQUE,
-        songs.YOU_DIE
-    ])
 
+all_songs = songs.all_songs
+
+gilman = [
+    songs.BETTER_ANGELS,
+    songs.FORM_WITHOUT_MEANING,
+    songs.MOONLIGHT_TRIALS,
+    songs.FUTURE_IS_GAY,
+    songs.BUILDING_THE_LABYRINTH,
+    songs.COMPLICATED_FEELING,
+    songs.NOBODY_REALLY,
+    songs.VAPORWAVE,
+    songs.YOU_DIE,
+]
+
+async def main():
+    jophur = Jophur(gilman)
     listener = Listener()
 
     await asyncio.gather(

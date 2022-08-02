@@ -15,8 +15,12 @@ COMPLICATED_FEELING = "Complicated Feeling"
 AUTUMNESQUE = "Autumnesque"
 YOU_DIE = "You Die"
 IN_SLOW_MOTION = "In Slow Motion"
+VAPORWAVE = "Vaporwave"
+PSYCHO_KILLER = "Psycho Killer"
+LIFE_ON_MARS = "Life on Mars"
+NATURE_BOY = "Nature Boy"
 
-songs = [
+all_songs = [
     FORM_WITHOUT_MEANING,
     FUTURE_IS_GAY,
     BETTER_ANGELS,
@@ -31,6 +35,10 @@ songs = [
     AUTUMNESQUE,
     YOU_DIE,
     IN_SLOW_MOTION,
+    VAPORWAVE,
+    PSYCHO_KILLER,
+    LIFE_ON_MARS,
+    NATURE_BOY,
 ]
 
 class PatchData:
@@ -93,20 +101,38 @@ song_program_data = {
         PD(juno=(4, 63), reverb=33), # random pitch crazy laboratory
     ],
 
+    LIFE_ON_MARS: [
+        PD(juno=(4, 55), reverb=22), # Stairway flutes, plate
+    ],
+
     MOONLIGHT_TRIALS: [
         PD(juno=(4, 72), reverb=18), # moonlight trials
+    ],
+
+    NATURE_BOY: [
+        PD(juno=(4, 55), reverb=22), # Stairway flutes, plate
     ],
 
     NOBODY_REALLY: [
         PD(juno=(4, 67), reverb=6),  # Softer thing
     ],
 
+    PSYCHO_KILLER: [
+        PD(juno=(4, 52), reverb=27), # future is gay
+    ],
+
     SHUT_THE_WINDOWS: [
         PD(juno=(4, 73), reverb=36), # shut the windows
+    ],
+
+    VAPORWAVE: [
+        PD(juno=(4, 45), reverb=39), # Slow attack noisy nasalness,
+        PD(juno=(4, 42), reverb=40), # Verse
+        PD(juno=(4, 44), reverb=39), # Quick attack phasey masterpiece,
     ],
 
     YOU_DIE: [
         PD(juno=(4, 81), reverb=30), # Organ
         PD(juno=(4, 82), reverb=30)  # Da randomizer
-    ]
+    ],
 }
