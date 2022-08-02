@@ -8,7 +8,7 @@ from math import floor
 from lib.jophur.util import lerp
 
 from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, KNOB_DOWN, Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
-from lib.jophur import buttons, display, songs, midi
+from lib.jophur import buttons, display, files, songs, midi
 
 def new_led(pin):
     led = digitalio.DigitalInOut(pin)
@@ -68,14 +68,12 @@ def get_vbat_voltage(pin):
 ##### END BATTERY STUFF ###
 
 async def turn_screen_off(jophur):
-    await asyncio.sleep(30) # seconds
+    await asyncio.sleep(300) # seconds
 
     for i in range(0, len(jophur.button_leds)):
         jophur.button_leds[i].value = 0
 
     jophur.text_area.text = ""
-
-
 
 async def jophur_event_loop(jophur, listener):
     asyncio.create_task(turn_screen_off(jophur))
@@ -146,23 +144,11 @@ async def jophur_event_loop(jophur, listener):
 
         await asyncio.sleep(0)
 
-
-all_songs = songs.all_songs
-
-gilman = [
-    songs.BETTER_ANGELS,
-    songs.FORM_WITHOUT_MEANING,
-    songs.MOONLIGHT_TRIALS,
-    songs.FUTURE_IS_GAY,
-    songs.BUILDING_THE_LABYRINTH,
-    songs.COMPLICATED_FEELING,
-    songs.NOBODY_REALLY,
-    songs.VAPORWAVE,
-    songs.YOU_DIE,
-]
-
 async def main():
-    jophur = Jophur(gilman)
+    # did we deploy?
+    setlist = files.read_setlist("setlists/setlist.txt")
+    print("Setlist", setlist)
+    jophur = Jophur(setlist or songs.all_songs)
     listener = Listener()
 
     await asyncio.gather(
