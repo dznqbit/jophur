@@ -21,6 +21,9 @@ class Jophur:
         self.text_area = display.init(f"Jophur v0.2")
         self.button_leds = [new_led(pin) for pin in [board.A5, board.D4, board.D13]]
 
+    def replace_setlist(self, setlist):
+        self.songs = setlist
+
     def selected_song_name(self):
         return self.songs[self.selected_song_index]
 
@@ -51,3 +54,6 @@ class Jophur:
         self.current_patch_song_index = self.selected_song_index
 
         return self.current_patch_data()
+
+    def selected_song_and_index(self):
+      return f"{1 + self.selected_song_index}/{len(self.songs)} {self.selected_song_name()}"
