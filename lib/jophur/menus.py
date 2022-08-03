@@ -7,7 +7,7 @@ from lib.jophur import buttons
 from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, KNOB_DOWN, monitor_buttons, monitor_rotary_encoder, monitor_pedal
 from lib.jophur.util import lerp
 
-class MenuStateMachine():
+class menu_state_machine():
     def __init__(self, menus):
         self.menu = None
         self.menus = menus
@@ -19,17 +19,13 @@ class MenuStateMachine():
         self.menu = self.menus[menu_name]
         self.menu.enter(self)
 
-    async def update(self):
+    async def loop(self):
         if self.menu:
-          await self.menu.update(self)
+          await self.menu.loop(self)
 
-class Menu():
+class menu():
     def __init__(self, jophur):
         self.jophur = jophur
-
-    @property
-    def name(self):
-        return ''
 
     def enter(self, machine):
         pass
@@ -40,7 +36,7 @@ class Menu():
     async def loop(self, machine):
         return True
 
-class InitMenu(Menu):
+class init_menu(menu):
     def enter(self, _):
       pass
 
@@ -55,7 +51,7 @@ def get_vbat_voltage(pin):
     return (pin.value * 3.3) / 65536 * 2
 ##### END BATTERY STUFF ###
 
-class MainMenu(Menu):
+class main_menu(menu):
     def __init__(self, jophur, listener):
         super().__init__(jophur)
         self.listener = listener
