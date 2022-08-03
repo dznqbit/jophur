@@ -4,9 +4,8 @@ from math import floor
 from lib.jophur.util import lerp
 
 from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, KNOB_DOWN, Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
-from lib.jophur import files, songs
+from lib.jophur import files, songs, menus
 from lib.jophur.jophur import Jophur
-from lib.jophur.menus import menu_state_machine, init_menu, main_menu
 
 async def delayed_turn_screen_off(jophur):
     await asyncio.sleep(300) # seconds
@@ -28,18 +27,18 @@ async def main():
     jophur = Jophur(songs.all_songs)
     jophur.replace_setlist(setlist)
     listener = Listener()
-    state_machine = menu_state_machine({
-        "Init": init_menu(jophur),
-        "Main": main_menu(jophur, listener),
+    state_machine = menus.menu_state_machine({
+        menus.INIT: menus.init_menu(jophur),
+        menus.MAIN: menus.main_menu(jophur, listener),
+        menus.BATTERY: menus.battery_menu(jophur, listener),
     })
-    state_machine.go_to_menu("Init")
+    state_machine.go_to_menu(menus.INIT)
 
     await asyncio.gather(
         asyncio.create_task(run_state_machine(state_machine)),
         asyncio.create_task(monitor_buttons(listener)),
         asyncio.create_task(monitor_rotary_encoder(listener)),
         asyncio.create_task(monitor_pedal(listener)),
-        # asyncio.create_task(jophur_event_loop(jophur, listener)),
     )
 
 asyncio.run(main())
