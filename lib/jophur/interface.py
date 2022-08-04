@@ -17,6 +17,9 @@ class Listener:
     def __init__(self):
         self.events = []
     
+    def clear(self):
+        self.events.clear()
+
     def knob_rotated(self, direction):
         self.events.append((KNOB, KNOB_UP if direction > 0 else KNOB_DOWN))
 

@@ -31,6 +31,7 @@ async def main():
         menus.INIT: menus.init_menu(jophur),
         menus.MAIN: menus.main_menu(jophur, listener),
         menus.BATTERY: menus.battery_menu(jophur, listener),
+        menus.BLANK: menus.blank_menu(jophur, listener),
     })
     state_machine.go_to_menu(menus.INIT)
 

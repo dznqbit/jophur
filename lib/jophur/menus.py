@@ -5,11 +5,12 @@ from analogio import AnalogIn
 
 from lib.jophur import buttons
 from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, KNOB_DOWN
-from lib.jophur.util import lerp
+from lib.jophur.util import lerp, rotate_index
 
 INIT = "Init"
 MAIN = "Main"
 BATTERY = "Battery"
+BLANK = "Blank"
 
 class menu_state_machine():
     def __init__(self, menus):
@@ -20,8 +21,11 @@ class menu_state_machine():
         if self.menu:
             self.menu.exit(self)
 
-        self.menu = self.menus[menu_name]
-        self.menu.enter(self)
+        menu = self.menus[menu_name]
+
+        if menu:
+            self.menu = self.menus[menu_name]
+            self.menu.enter(self)
 
     async def loop(self):
         if self.menu:
@@ -45,7 +49,7 @@ class init_menu(menu):
       pass
 
     async def loop(self, machine):
-      await asyncio.sleep(2)
+      await asyncio.sleep(0.1)
       machine.go_to_menu(MAIN)
 
 class main_menu(menu):
@@ -136,14 +140,30 @@ class battery_menu(menu):
     def __init__(self, jophur, listener):
         super().__init__(jophur)
         self.listener = listener
+        self.options = [
+            "battery",
+            "display off",
+        ]
+        self.current_option_index = 0
+        self.last_knob_events = []
 
     def enter(self, _):
-        # Fully charge: 3.92
-        v = get_vbat_voltage(vbat_voltage)
-        self.jophur.text_area.text = "VBat voltage: {:.2f}".format(v)
+        self.current_option_index = 0
+        self.update_ui()
 
     def exit(self, _):
         pass
+
+    def update_ui(self):
+        option = self.options[self.current_option_index]
+
+        if option == "battery":
+            # Fully charge: 3.92
+            v = get_vbat_voltage(vbat_voltage)
+            self.jophur.text_area.text = "VBat voltage: {:.2f}".format(v)
+
+        if option == "display off":
+            self.jophur.text_area.text = "Display off"
 
     async def loop(self, machine):
         listener = self.listener
@@ -152,8 +172,58 @@ class battery_menu(menu):
         if len(listener.events) > 0:
             (event_name, event_data) = listener.events.pop(0)
 
-            if event_name == BUTTON:
-                machine.go_to_menu(MAIN)
+            if event_name == KNOB:
+                last_knob_events = self.last_knob_events
 
+                if len(last_knob_events) > 3:
+                    last_knob_events.remove(last_knob_events[0])
+
+                last_knob_events.append(event_data)
+
+                if len(last_knob_events) > 1:
+                    if (all(e == KNOB_UP for e in last_knob_events)):
+                        self.current_option_index = rotate_index(len(self.options), self.current_option_index, 1)
+
+                    if (all(e == KNOB_DOWN for e in last_knob_events)):
+                        self.current_option_index = rotate_index(len(self.options), self.current_option_index, -1)
+
+                    last_knob_events.clear()
+
+            if event_name == BUTTON:
+                option = self.options[self.current_option_index]
+
+                if option == "display off":
+                    machine.go_to_menu(BLANK)
+                    return
+                else:
+                    machine.go_to_menu(MAIN)
+                    return
+
+            self.update_ui()
+
+class blank_menu():
+    def __init__(self, jophur, listener):
+        self.jophur = jophur
+        self.listener = listener
+
+    def enter(self, _):
+        j = self.jophur
+        j.text_area.text = ""
+
+        for i in range(0, len(j.button_leds)):
+            j.button_leds[i].value = 0
+
+        pass
+
+    def exit(self, _):
+        pass
+
+    async def loop(self, machine):
+        if len(self.listener.events) > 0:
+            (event_name, event_data) = self.listener.events.pop(0)
+            if event_name == PEDAL:
+                return
+
+            machine.go_to_menu(MAIN)
 
 ##### END BATTERY STUFF ###
