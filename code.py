@@ -19,8 +19,11 @@ def turn_screen_off(jophur):
 
 async def run_state_machine(state_machine):
     while True:
-        await state_machine.loop()
-        await asyncio.sleep(0)
+        try:
+            await state_machine.loop()
+            await asyncio.sleep(0)
+        except BaseException as err:
+            print(err)
 
 async def main():
     setlist = files.read_setlist("setlists/setlist.txt")
