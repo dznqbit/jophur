@@ -3,6 +3,7 @@ import rotaryio
 import board
 import asyncio
 import keypad
+import time
 from math import floor
 from lib.jophur import buttons
 
@@ -16,25 +17,36 @@ KNOB_DOWN = "DOWN"
 class Listener:
     def __init__(self):
         self.events = []
+        self.last_event_at = time.monotonic()
     
     def clear(self):
         self.events.clear()
 
+    def is_idle(self):
+        threshold = 600 # 10 minutes
+        return self.seconds_since_last_event() > threshold
+
+    def seconds_since_last_event(self):
+        return time.monotonic() - self.last_event_at
+
     def knob_rotated(self, direction):
         self.events.append((KNOB, KNOB_UP if direction > 0 else KNOB_DOWN))
+        self.last_event_at = time.monotonic()
 
     def button_pressed(self, button):
         self.events.append((BUTTON, button))
+        self.last_event_at = time.monotonic()
     
     def expression_pedaled(self, linear_amount):
         self.events.append((PEDAL, linear_amount))
+        self.last_event_at = time.monotonic()
 
 async def monitor_rotary_encoder(listener):
     encoder = rotaryio.IncrementalEncoder(board.A3, board.A4)
     position = encoder.position
     last_position = None
 
-    while True:
+    while True and not listener.is_idle():
         position = encoder.position
         if last_position is not None and position != last_position:
             listener.knob_rotated(position - last_position)
@@ -56,7 +68,7 @@ async def monitor_buttons(listener):
     button_pins = list(button_dict.keys())
 
     with keypad.Keys(button_pins, value_when_pressed=False, pull=True) as keys:
-        while True:
+        while True and not listener.is_idle():
             key_event = keys.events.get()
             if key_event and key_event.pressed:
                 button_name = button_dict[button_pins[key_event.key_number]]
@@ -76,7 +88,7 @@ async def monitor_pedal(listener):
     # STANDARD is too noisy and has a weird curve.
     voltage_threshold = 0.025
 
-    while True:
+    while True and not listener.is_idle():
         voltage = get_voltage(pedal)
         if last_voltage and (abs(voltage - last_voltage) > voltage_threshold):
             listener.expression_pedaled(voltage / 3.3)
