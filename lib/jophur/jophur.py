@@ -56,4 +56,9 @@ class Jophur:
         return self.current_patch_data()
 
     def selected_song_and_index(self):
-      return f"{1 + self.selected_song_index}/{len(self.songs)} {self.selected_song_name()}"
+        return f"{1 + self.selected_song_index}/{len(self.songs)} {self.selected_song_name()}"
+
+    def lights_out(self):
+        self.text_area.text = ""
+        for i in range(0, len(self.button_leds)):
+            self.button_leds[i].value = 0

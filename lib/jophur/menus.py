@@ -1,5 +1,8 @@
 import asyncio
 import board
+import os
+from lib.jophur.files import read_setlist
+import ulab
 from math import floor
 from analogio import AnalogIn
 
@@ -11,6 +14,7 @@ INIT = "Init"
 MAIN = "Main"
 BATTERY = "Battery"
 BLANK = "Blank"
+SETLISTS = "Setlists"
 
 class menu_state_machine():
     def __init__(self, menus):
@@ -70,6 +74,7 @@ class main_menu(menu):
 
     def enter(self, _):
         self.last_knob_events = []
+        self.update_ui()
 
     def exit(self, _):
         pass
@@ -136,13 +141,14 @@ vbat_voltage = AnalogIn(board.VOLTAGE_MONITOR)
 def get_vbat_voltage(pin):
     return (pin.value * 3.3) / 65536 * 2
 
-class battery_menu(menu):
+class select_menu(menu):
     def __init__(self, jophur, listener):
         super().__init__(jophur)
         self.listener = listener
         self.options = [
             "battery",
             "display off",
+            "setlists",
         ]
         self.current_option_index = 0
         self.last_knob_events = []
@@ -164,6 +170,9 @@ class battery_menu(menu):
 
         if option == "display off":
             self.jophur.text_area.text = "Display off"
+        
+        if option == "setlists":
+            self.jophur.text_area.text = "Setlists"
 
     async def loop(self, machine):
         listener = self.listener
@@ -195,6 +204,11 @@ class battery_menu(menu):
                 if option == "display off":
                     machine.go_to_menu(BLANK)
                     return
+                
+                elif option == "setlists":
+                    machine.go_to_menu(SETLISTS)
+                    return
+
                 else:
                     machine.go_to_menu(MAIN)
                     return
@@ -208,11 +222,7 @@ class blank_menu():
 
     def enter(self, _):
         j = self.jophur
-        j.text_area.text = ""
-
-        for i in range(0, len(j.button_leds)):
-            j.button_leds[i].value = 0
-
+        j.lights_out()
         pass
 
     def exit(self, _):
@@ -227,3 +237,65 @@ class blank_menu():
             machine.go_to_menu(MAIN)
 
 ##### END BATTERY STUFF ###
+
+class setlist_menu():
+    def __init__(self, jophur, listener):
+        self.jophur = jophur
+        self.listener = listener
+        self.setlists = []
+        self.selected_index = 0
+        self.last_knob_events = []
+    
+    def enter(self, _):
+        self.setlists = os.listdir("setlists")
+        self.selected_index = 0
+        self.update_ui()
+
+    def exit(self, _):
+        pass
+
+    def update_ui(self):
+        setlists_with_selection = list(map(
+            lambda n: f"> {n[1]}" if n[0] == self.selected_index else n[1],
+            list(enumerate(self.setlists))
+        ))
+        rolled_setlist = setlists_with_selection[self.selected_index:self.selected_index+2]
+        if len(rolled_setlist) == 1 and len(setlists_with_selection) > 1:
+            rolled_setlist.append(setlists_with_selection[0])
+        self.jophur.text_area.text = "\n".join(rolled_setlist)
+
+    def load_selected_setlist(self):
+        setlist = read_setlist(f"setlists/{self.setlists[self.selected_index]}")
+        self.jophur.replace_setlist(setlist)
+
+    async def loop(self, machine):
+        last_knob_events = self.last_knob_events
+        j = self.jophur
+
+        if len(self.listener.events) > 0:
+            (event_name, event_data) = self.listener.events.pop(0)
+
+            if event_name == BUTTON:
+                if event_data == buttons.ROTARY:
+                    self.load_selected_setlist()
+
+                machine.go_to_menu(MAIN)
+
+            if event_name == KNOB:
+                if len(last_knob_events) > 3:
+                    last_knob_events.remove(last_knob_events[0])
+                last_knob_events.append(event_data)
+
+                if len(last_knob_events) > 1:
+                    if (all(e == KNOB_UP for e in last_knob_events)):
+                        self.selected_index = rotate_index(len(self.setlists), self.selected_index, 1)
+
+                    if (all(e == KNOB_DOWN for e in last_knob_events)):
+                        self.selected_index = rotate_index(len(self.setlists), self.selected_index, -1)                        
+
+                    last_knob_events.clear()
+
+                
+            
+            self.update_ui()
+
