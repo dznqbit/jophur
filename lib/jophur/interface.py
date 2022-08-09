@@ -3,6 +3,7 @@ import rotaryio
 import board
 import asyncio
 import keypad
+import time
 from math import floor
 from lib.jophur import buttons
 
@@ -14,14 +15,27 @@ KNOB_UP = "UP"
 KNOB_DOWN = "DOWN"
 
 class Listener:
-    def __init__(self):
+    def __init__(self, threshold = 600):
         self.events = []
+        self.last_event_at = time.monotonic()
+        self.threshold = threshold
     
+    def clear(self):
+        self.events.clear()
+
+    def is_idle(self):
+        return self.seconds_since_last_event() > self.threshold
+
+    def seconds_since_last_event(self):
+        return time.monotonic() - self.last_event_at
+
     def knob_rotated(self, direction):
         self.events.append((KNOB, KNOB_UP if direction > 0 else KNOB_DOWN))
+        self.last_event_at = time.monotonic()
 
     def button_pressed(self, button):
         self.events.append((BUTTON, button))
+        self.last_event_at = time.monotonic()
     
     def expression_pedaled(self, linear_amount):
         self.events.append((PEDAL, linear_amount))
@@ -80,3 +94,5 @@ async def monitor_pedal(listener):
       
         last_voltage = voltage
         await asyncio.sleep(0)
+    
+    pedal.deinit()

@@ -1,175 +1,43 @@
-import board
-import digitalio
-from analogio import AnalogIn
 import asyncio
-
+import alarm
+import board
 from time import sleep, time
 from math import floor
 from lib.jophur.util import lerp
 
-from lib.jophur.interface import PEDAL, KNOB, BUTTON, KNOB_UP, KNOB_DOWN, Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
-from lib.jophur import buttons, display, songs, midi
+from lib.jophur.interface import Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
+from lib.jophur import files, songs, menus
+from lib.jophur.jophur import Jophur
 
-def new_led(pin):
-    led = digitalio.DigitalInOut(pin)
-    led.direction = digitalio.Direction.OUTPUT
-
-    return led
-
-class Jophur:
-    def __init__(self, setlist):
-        self.songs = setlist
-        self.song_program_data = songs.song_program_data
-
-        self.selected_song_index = 0
-        self.current_patch_song_index = 0
-        self.current_patch_index = 0
-
-        self.midi = midi.JophurMidi()
-        self.text_area = display.init(f"Jophur v0.2")
-        self.button_leds = [new_led(pin) for pin in [board.A5, board.D4, board.D13]]
-
-    def selected_song_name(self):
-        return self.songs[self.selected_song_index]
-
-    def select_next_song(self):
-        self.selected_song_index = (self.selected_song_index + 1) % len(self.songs)
-        return self.selected_song_name()
-
-    def select_previous_song(self):
-        self.selected_song_index = (len(self.songs) + self.selected_song_index - 1) % len(self.songs)
-        return self.selected_song_name()
-
-    def current_patch_data(self):
-        current_song_name = self.songs[self.current_patch_song_index]
-
-        return (
-            current_song_name,
-            self.current_patch_index,
-            self.song_program_data[current_song_name][self.current_patch_index]
-        )
-
-    def set_current_patch(self, song_name, patch_index):
-        song_data = self.song_program_data[song_name]
-
-        if song_data is None or len(song_data) <= patch_index:
-            return None
-
-        self.current_patch_index = patch_index
-        self.current_patch_song_index = self.selected_song_index
-
-        return self.current_patch_data()
-
-### BATTERY STUFF ###
-vbat_voltage = AnalogIn(board.VOLTAGE_MONITOR)
-
-def get_vbat_voltage(pin):
-    return (pin.value * 3.3) / 65536 * 2
-##### END BATTERY STUFF ###
-
-async def turn_screen_off(jophur):
-    await asyncio.sleep(30) # seconds
-
-    for i in range(0, len(jophur.button_leds)):
-        jophur.button_leds[i].value = 0
-
-    jophur.text_area.text = ""
-
-
-
-async def jophur_event_loop(jophur, listener):
-    asyncio.create_task(turn_screen_off(jophur))
-    last_knob_events = []
-
+async def run_state_machine(state_machine, listener):
     while True:
-        if len(listener.events) > 0:
-            (event_name, event_data) = listener.events.pop(0)
-
-            if event_name == KNOB:
-                if len(last_knob_events) > 3:
-                    last_knob_events.remove(last_knob_events[0])
-
-                last_knob_events.append(event_data)
-                
-                if len(last_knob_events) > 1:
-                    if (all(e == KNOB_UP for e in last_knob_events)):
-                        song = jophur.select_next_song()
-                        jophur.text_area.text = song
-
-                    if (all(e == KNOB_DOWN for e in last_knob_events)):
-                        song = jophur.select_previous_song()
-                        jophur.text_area.text = song
-
-                    last_knob_events.clear()
-
-            if event_name == BUTTON:
-                button = event_data
-                if button == buttons.ROTARY:
-                    v = get_vbat_voltage(vbat_voltage)
-
-                    # Fully charge: 3.92
-                    print("VBat voltage: {:.2f}".format(v))
-                    # jophur.text_area.text = "VBat voltage: {:.2f}".format(v)
-                    jophur.text_area.text = ""
-
-                if button in [buttons.A, buttons.B, buttons.C]:
-                    selected_patch = jophur.set_current_patch(
-                        jophur.selected_song_name(),
-                        [buttons.A, buttons.B, buttons.C].index(button)
-                    )
-
-                    if selected_patch is None:
-                        continue
-
-                    (song, patch_index, patch_data) = selected_patch
-
-                    print(song, patch_index, "send midi", patch_data)
-                    jophur.midi.junoProgram(patch_data.juno_program[0], patch_data.juno_program[1])
-                    jophur.midi.reverbProgram(patch_data.reverb_program)
-
-            if event_name == PEDAL:
-                selected_patch = jophur.current_patch_data()
-                (_, _, patch_data) = selected_patch
-                if patch_data.expression:
-                    (exp_cc, exp_lo, exp_hi) = patch_data.expression
-                    jophur.midi.junoCC(
-                        exp_cc,
-                        floor(lerp(event_data, exp_lo, exp_hi))
-                    )
-            else:
-                asyncio.create_task(turn_screen_off(jophur))
-
-                # Update LEDs
-                for i in range(0, len(jophur.button_leds)):
-                    jophur.button_leds[i].value = jophur.current_patch_index == i and \
-                        jophur.selected_song_index == jophur.current_patch_song_index
-
-        await asyncio.sleep(0)
-
-
-all_songs = songs.all_songs
-
-gilman = [
-    songs.BETTER_ANGELS,
-    songs.FORM_WITHOUT_MEANING,
-    songs.MOONLIGHT_TRIALS,
-    songs.FUTURE_IS_GAY,
-    songs.BUILDING_THE_LABYRINTH,
-    songs.COMPLICATED_FEELING,
-    songs.NOBODY_REALLY,
-    songs.VAPORWAVE,
-    songs.YOU_DIE,
-]
+        try:
+            if listener.is_idle():
+                state_machine.go_to_menu(menus.BLANK)
+            await state_machine.loop()
+            await asyncio.sleep(0)
+        except BaseException as err:
+            print(err)
 
 async def main():
-    jophur = Jophur(gilman)
-    listener = Listener()
+    setlist = files.read_setlist("setlists/ftg.txt")
+    jophur = Jophur(songs.all_songs)
+    jophur.replace_setlist(setlist)
+    listener = Listener(threshold=600)
+    state_machine = menus.menu_state_machine({
+        menus.INIT: menus.init_menu(jophur),
+        menus.MAIN: menus.main_menu(jophur, listener),
+        menus.BATTERY: menus.select_menu(jophur, listener),
+        menus.BLANK: menus.blank_menu(jophur, listener),
+        menus.SETLISTS: menus.setlist_menu(jophur, listener),
+    })
+    state_machine.go_to_menu(menus.INIT)
 
     await asyncio.gather(
+        asyncio.create_task(run_state_machine(state_machine, listener)),
         asyncio.create_task(monitor_buttons(listener)),
         asyncio.create_task(monitor_rotary_encoder(listener)),
         asyncio.create_task(monitor_pedal(listener)),
-        asyncio.create_task(jophur_event_loop(jophur, listener)),
     )
 
 asyncio.run(main())

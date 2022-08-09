@@ -1,21 +1,21 @@
 # jophur/songs.py
 from jophur import midi
 
-FORM_WITHOUT_MEANING = "Form Without Meaning"
-FUTURE_IS_GAY = "Future is Gay"
+AUTUMNESQUE = "Autumnesque"
 BETTER_ANGELS = "Better Angels"
 BUILDING_THE_LABYRINTH = "Building the Labyrinth"
-INFINITE_LOOP = "Infinite Loop"
 CLUTTER = "Clutter"
-NOBODY_REALLY = "Nobody Really"
-FOLDING_IN_THIRDS = "Folding in 3rds"
-MOONLIGHT_TRIALS = "Moonlight Trials"
-SHUT_THE_WINDOWS = "Shut the Windows"
 COMPLICATED_FEELING = "Complicated Feeling"
-AUTUMNESQUE = "Autumnesque"
-YOU_DIE = "You Die"
-IN_SLOW_MOTION = "In Slow Motion"
+FOLDING_IN_THIRDS = "Folding in Thirds"
+FORM_WITHOUT_MEANING = "Form Without Meaning"
+FUTURE_IS_GAY = "Future is Gay"
+INFINITE_LOOP = "Infinite Loop"
+MOONLIGHT_TRIALS = "Moonlight Trials"
+NOBODY_REALLY = "Nobody Really Knows"
+SHUT_THE_WINDOWS = "Shut the Windows"
 VAPORWAVE = "Vaporwave"
+YOU_DIE = "You Die"
+
 PSYCHO_KILLER = "Psycho Killer"
 LIFE_ON_MARS = "Life on Mars"
 NATURE_BOY = "Nature Boy"
@@ -34,7 +34,6 @@ all_songs = [
     COMPLICATED_FEELING,
     AUTUMNESQUE,
     YOU_DIE,
-    IN_SLOW_MOTION,
     VAPORWAVE,
     PSYCHO_KILLER,
     LIFE_ON_MARS,
