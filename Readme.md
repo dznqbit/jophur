@@ -9,26 +9,26 @@ jophur is coded in [CircuitPython](https://github.com/adafruit/circuitpython), w
 ## Hardware
 Developed on the [Adafruit Feather M4 Express](https://learn.adafruit.com/adafruit-feather-m4-express-atsamd51). Theoretically any Feather Express should work.
 
-| Board Pin Name | Software Pin Name | Function |
-|-|-|-|
-| A0 | `board.A0` | Expression Pedal In |
-| A1 | `board.A1` | _empty_ |
-| A2 | `board.A2` | [Rotary Encoder](https://learn.adafruit.com/rotary-encoder/overview) Button |
-| A3 | `board.A3` | [Rotary Encoder](https://learn.adafruit.com/rotary-encoder/overview) Data 1 |
-| A4 | `board.A4` | [Rotary Encoder](https://learn.adafruit.com/rotary-encoder/overview) Data 2 |
-| A5 | `board.A5` | Button LED A |
-| D4 | `board.D4` | Button LED B |
-| 5 | `board.D5` | OLED A Button |
-| 6 | `board.D6` | OLED B Button |
-| 9 | `board.D9` | OLED C Button |
-| 10 | `board.D10` | Button A |
-| 11 | `board.D11` | Button B |
-| 12 | `board.D12` | Button C |
-| 13 | `board.D13` | Button LED C |
-| TX | `board.TX` | Midi Send |
-| RX | `board.RX` | Midi Receive (disabled?) |
-| SCL | `board.i2c` | OLED |
-| SDA | `board.i2c` | OLED |
+| M4 Pin | RP2040 Pin | Software Pin Name | Function |
+|-|-|-|-|
+| A0 | ? | `board.A0` | Expression Pedal In |
+| A1 | ? | `board.A1` | _empty_ |
+| A2 | ? | `board.A2` | [Rotary Encoder](https://learn.adafruit.com/rotary-encoder/overview) Button |
+| A3 | ? | `board.A3` | [Rotary Encoder](https://learn.adafruit.com/rotary-encoder/overview) Data 1 |
+| A4 | ? | `board.A4` | [Rotary Encoder](https://learn.adafruit.com/rotary-encoder/overview) Data 2 |
+| A5 | ? | `board.A5` | Button LED A |
+| D4 | ? | `board.D4` | Button LED B |
+| 5 | ? | `board.D5` | OLED A Button |
+| 6 | ? | `board.D6` | OLED B Button |
+| 9 | ? | `board.D9` | OLED C Button |
+| 10 | ? | `board.D10` | Button A |
+| 11 | ? | `board.D11` | Button B |
+| 12 | ? | `board.D12` | Button C |
+| 13 | ? | `board.D13` | Button LED C |
+| TX | ? | `board.TX` | Midi Send |
+| RX | ? | `board.RX` | Midi Receive (disabled?) |
+| SCL | ? | `board.i2c` | OLED |
+| SDA | ? | `board.i2c` | OLED |
 
 
 ### MIDI Environment
