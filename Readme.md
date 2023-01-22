@@ -25,8 +25,8 @@ Developed on the [Adafruit Feather M4 Express](https://learn.adafruit.com/adafru
 | 10 | GP11 | `board.D10` | Button A |
 | 11 | GP12 | `board.D11` | Button B |
 | 12 | GP13 | `board.D12` | Button C |
-| TX | TX/GP00 (TX, UART0 TX) | `board.TX` | Midi Send |
-| RX | RX/GP01 (RX, UART0 RX) | `board.RX` | Midi Receive (disabled?) |
+| TX | TX/GP00 (UART0 TX) | `board.TX` | Midi Send |
+| RX | RX/GP01 (UART0 RX) | `board.RX` | Midi Receive (disabled?) |
 | SCL | SCL (I2C1 SCL) | `board.i2c` | OLED |
 | SDA | SDA (I2C1 SDA) | `board.i2c` | OLED |
 
