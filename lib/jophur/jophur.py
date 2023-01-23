@@ -9,7 +9,8 @@ def new_led(pin):
     return led
 
 class Jophur:
-    def __init__(self, setlist):
+    def __init__(self, setlist, config):
+        self.config = config
         self.songs = setlist
         self.song_program_data = songs.song_program_data
 
@@ -17,9 +18,10 @@ class Jophur:
         self.current_patch_song_index = 0
         self.current_patch_index = 0
 
+        version_str = f"Jophur %s %s" % ("v0.4", config.board_id)
         self.midi = midi.JophurMidi()
-        self.text_area = display.init(f"Jophur v0.3")
-        self.button_leds = [new_led(pin) for pin in [board.D24, board.D25, board.SCK]]
+        self.text_area = display.init(version_str)
+        self.button_leds = [new_led(pin) for pin in [config.ledA, config.ledB, config.ledC]]
 
     def replace_setlist(self, setlist):
         self.songs = setlist

@@ -86,7 +86,6 @@ class main_menu(menu):
 
         if len(listener.events) > 0:
             (event_name, event_data) = listener.events.pop(0)
-            print(event_name, event_data)
             if event_name == KNOB:
                 if len(last_knob_events) > 3:
                     last_knob_events.remove(last_knob_events[0])

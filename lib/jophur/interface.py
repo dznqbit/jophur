@@ -40,8 +40,8 @@ class Listener:
     def expression_pedaled(self, linear_amount):
         self.events.append((PEDAL, linear_amount))
 
-async def monitor_rotary_encoder(listener):
-    encoder = rotaryio.IncrementalEncoder(board.A2, board.A3)
+async def monitor_rotary_encoder(listener, config):
+    encoder = rotaryio.IncrementalEncoder(config.rotaryEncoder1, config.rotaryEncoder2)
     position = encoder.position
     last_position = None
 
@@ -53,15 +53,15 @@ async def monitor_rotary_encoder(listener):
         last_position = position
         await asyncio.sleep(0)
 
-async def monitor_buttons(listener):
+async def monitor_buttons(listener, config):
     button_dict = {
-        board.A1: buttons.ROTARY,
-        board.D9: buttons.OLED_A,
-        board.D6: buttons.OLED_B,
-        board.D5: buttons.OLED_C,
-        board.D11: buttons.A,
-        board.D12: buttons.B,
-        board.D13: buttons.C
+        config.rotaryButton: buttons.ROTARY,
+        config.oledButtonA: buttons.OLED_A,
+        config.oledButtonB: buttons.OLED_B,
+        config.oledButtonC: buttons.OLED_C,
+        config.buttonA: buttons.A,
+        config.buttonB: buttons.B,
+        config.buttonC: buttons.C
     }
 
     button_pins = list(button_dict.keys())
@@ -70,7 +70,6 @@ async def monitor_buttons(listener):
         while True:
             key_event = keys.events.get()
             if key_event and key_event.pressed:
-                print("woah")
                 button_name = button_dict[button_pins[key_event.key_number]]
                 listener.button_pressed(button_name)
 
@@ -80,7 +79,7 @@ async def monitor_buttons(listener):
 def get_voltage(pin):
     return (pin.value / 65536) * pin.reference_voltage
 
-async def monitor_pedal(listener):
+async def monitor_pedal(listener, config):
     # TEMP while RP2040
     return None
 
