@@ -9,6 +9,10 @@ from lib.jophur.interface import Listener, monitor_buttons, monitor_rotary_encod
 from lib.jophur import files, songs, menus
 from lib.jophur.jophur import Jophur
 
+import microcontroller
+#print(dir(microcontroller.pin))
+print(dir(board))
+
 async def run_state_machine(state_machine, listener):
     while True:
         try:

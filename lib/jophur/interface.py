@@ -19,7 +19,7 @@ class Listener:
         self.events = []
         self.last_event_at = time.monotonic()
         self.threshold = threshold
-    
+
     def clear(self):
         self.events.clear()
 
@@ -36,12 +36,12 @@ class Listener:
     def button_pressed(self, button):
         self.events.append((BUTTON, button))
         self.last_event_at = time.monotonic()
-    
+
     def expression_pedaled(self, linear_amount):
         self.events.append((PEDAL, linear_amount))
 
 async def monitor_rotary_encoder(listener):
-    encoder = rotaryio.IncrementalEncoder(board.A3, board.A4)
+    encoder = rotaryio.IncrementalEncoder(board.A2, board.A3)
     position = encoder.position
     last_position = None
 
@@ -55,13 +55,13 @@ async def monitor_rotary_encoder(listener):
 
 async def monitor_buttons(listener):
     button_dict = {
-        board.A2: buttons.ROTARY,
+        board.A1: buttons.ROTARY,
         board.D9: buttons.OLED_A,
         board.D6: buttons.OLED_B,
         board.D5: buttons.OLED_C,
-        board.D10: buttons.A,
-        board.D11: buttons.B,
-        board.D12: buttons.C
+        board.D11: buttons.A,
+        board.D12: buttons.B,
+        board.D13: buttons.C
     }
 
     button_pins = list(button_dict.keys())
@@ -70,6 +70,7 @@ async def monitor_buttons(listener):
         while True:
             key_event = keys.events.get()
             if key_event and key_event.pressed:
+                print("woah")
                 button_name = button_dict[button_pins[key_event.key_number]]
                 listener.button_pressed(button_name)
 
@@ -80,6 +81,9 @@ def get_voltage(pin):
     return (pin.value / 65536) * pin.reference_voltage
 
 async def monitor_pedal(listener):
+    # TEMP while RP2040
+    return None
+
     pedal = AnalogIn(board.A0)
     last_voltage = None
 
@@ -91,8 +95,8 @@ async def monitor_pedal(listener):
         voltage = get_voltage(pedal)
         if last_voltage and (abs(voltage - last_voltage) > voltage_threshold):
             listener.expression_pedaled(voltage / 3.3)
-      
+
         last_voltage = voltage
         await asyncio.sleep(0)
-    
+
     pedal.deinit()

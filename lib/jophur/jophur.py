@@ -19,7 +19,7 @@ class Jophur:
 
         self.midi = midi.JophurMidi()
         self.text_area = display.init(f"Jophur v0.3")
-        self.button_leds = [new_led(pin) for pin in [board.A5, board.D4, board.D13]]
+        self.button_leds = [new_led(pin) for pin in [board.D24, board.D25, board.SCK]]
 
     def replace_setlist(self, setlist):
         self.songs = setlist
