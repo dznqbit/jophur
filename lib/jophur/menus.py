@@ -125,6 +125,7 @@ class main_menu(menu):
             if event_name == PEDAL:
                 selected_patch = jophur.current_patch_data()
                 (_, _, patch_data) = selected_patch
+                print("pedal", event_data, patch_data)
                 if patch_data.expression:
                     (exp_cc, exp_lo, exp_hi) = patch_data.expression
                     jophur.midi.junoCC(

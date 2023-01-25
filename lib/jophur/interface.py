@@ -80,10 +80,7 @@ def get_voltage(pin):
     return (pin.value / 65536) * pin.reference_voltage
 
 async def monitor_pedal(listener, config):
-    # TEMP while RP2040
-    return None
-
-    pedal = AnalogIn(board.A0)
+    pedal = AnalogIn(config.pedalAnalogIn)
     last_voltage = None
 
     # Moog exp pedal OTHER has clean signal and is linear.
@@ -96,6 +93,6 @@ async def monitor_pedal(listener, config):
             listener.expression_pedaled(voltage / 3.3)
 
         last_voltage = voltage
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.005)
 
     pedal.deinit()

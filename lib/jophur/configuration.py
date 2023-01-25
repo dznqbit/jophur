@@ -1,24 +1,6 @@
 import board
 
 class Configuration:
-  board_id = None
-
-  buttonA = None
-  buttonB = None
-  buttonC = None
-
-  ledA = None
-  ledB = None
-  ledC = None
-
-  oledButtonA = None
-  oledButtonB = None
-  oledButtonC = None
-
-  rotaryButton = None
-  rotaryEncoder1 = None
-  rotaryEncoder2 = None
-  
   def get():
     board_id = board.board_id
 
@@ -38,9 +20,11 @@ class Configuration:
         oledButtonB = board.D6,
         oledButtonC = board.D5,
 
+        pedalAnalogIn = board.A0,
+
         rotaryButton = board.A1,
         rotaryEncoder1 = board.A2,
-        rotaryEncoder2 = board.A3
+        rotaryEncoder2 = board.A3,
       )
 
     else:
@@ -60,30 +44,51 @@ class Configuration:
         oledButtonB = board.D6,
         oledButtonC = board.D5,
 
+        pedalAnalogIn = board.A0,
+
         rotaryButton = board.A2,
         rotaryEncoder1 = board.A3,
         rotaryEncoder2 = board.A4,
       )
 
-  def __init__(self, **kwargs):
-    self.board_id = kwargs.get('board_id')
+  def __init__(
+      self,
+      board_id=None,
 
-    # button taps
-    self.buttonA = kwargs.get('buttonA')
-    self.buttonB = kwargs.get('buttonB')
-    self.buttonC = kwargs.get('buttonC')
+      # button taps
+      buttonA=None,
+      buttonB=None,
+      buttonC=None,
 
-    # button LEDs
-    self.ledA = kwargs.get('ledA')
-    self.ledB = kwargs.get('ledB')
-    self.ledC = kwargs.get('ledC')
+      # button LEDs
+      ledA=None,
+      ledB=None,
+      ledC=None,
 
-    # OLED screen buttons
-    self.oledButtonA = kwargs.get('oledButtonA')
-    self.oledButtonB = kwargs.get('oledButtonB')
-    self.oledButtonC = kwargs.get('oledButtonC')
+      # Expression pedal
+      pedalAnalogIn=None,
 
-    # Rotary
-    self.rotaryButton = kwargs.get('rotaryButton')
-    self.rotaryEncoder1 = kwargs.get('rotaryEncoder1')
-    self.rotaryEncoder2 = kwargs.get('rotaryEncoder2')
+      # OLED screen buttons
+      oledButtonA=None,
+      oledButtonB=None,
+      oledButtonC=None,
+
+      # Rotary Encoder
+      rotaryButton=None,
+      rotaryEncoder1=None,
+      rotaryEncoder2=None,
+  ):
+    self.board_id = board_id
+    self.buttonA = buttonA
+    self.buttonB = buttonB
+    self.buttonC = buttonC
+    self.ledA = ledA
+    self.ledB = ledB
+    self.ledC = ledC
+    self.pedalAnalogIn = pedalAnalogIn
+    self.oledButtonA = oledButtonA
+    self.oledButtonB = oledButtonB
+    self.oledButtonC = oledButtonC
+    self.rotaryButton = rotaryButton
+    self.rotaryEncoder1 = rotaryEncoder1
+    self.rotaryEncoder2 = rotaryEncoder2
