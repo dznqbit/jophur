@@ -5,14 +5,7 @@ path = f"%s" % Path(__file__).parents[1].resolve()
 sys.path.append(path)
 
 """
-This file ensures everything is in place to run PyTest based unit tests against
-the adafruit_radio module. It works by using Python's mock library to add
-MagicMock objects to sys.modules for the modules which are not available to
-standard Python because they're CircuitPython only modules.
-Such mocking happens as soon as this conftest.py file is imported (so the
-mocked modules exist in sys.modules before the module to be tested is
-imported), and immediately before each test function is evaluated (so changes
-to state remain isolated between tests).
+Kudos https://ntoll.org/article/circuitpython-tests/
 """
 import sys
 from unittest.mock import MagicMock
