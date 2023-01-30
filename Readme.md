@@ -43,9 +43,24 @@ Right now we have a hardcoded MIDI environment
 - Install [Python 3](https://www.python.org/downloads/)
 - Install [pip](https://pypi.org/project/pip/)
 - Install [circup](https://github.com/adafruit/circup)
+- install [pytest](https://pytest.org/en/latest/getting-started.html)
+
+# Testing
+```
+pytest
+```
+
+#### with [rerun](https://github.com/alexch/rerun)
+```
+rerun -p "*.py" -d lib,tests "pytest"
+```
 
 ### Deploy to Attached Python Board
-`./script/deploy.sh`
+```
+./script/deploy.sh
+```
 
 ### Read from Attached Python Booard
-`./script/read.sh`
+```
+./script/read.sh
+```
