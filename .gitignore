@@ -2,3 +2,4 @@
 .vscode
 copy.txt
 deploy.txt
+__pycache__
