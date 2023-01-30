@@ -8,6 +8,7 @@ from lib.jophur.util import lerp
 from lib.jophur.interface import Listener, monitor_buttons, monitor_rotary_encoder, monitor_pedal
 from lib.jophur import files, songs, menus
 from lib.jophur.jophur import Jophur
+from lib.jophur.configuration import Configuration
 
 async def run_state_machine(state_machine, listener):
     while True:
@@ -20,8 +21,9 @@ async def run_state_machine(state_machine, listener):
             print(err)
 
 async def main():
+    config = Configuration.get()
     setlist = files.read_setlist("setlists/ftg.txt")
-    jophur = Jophur(songs.all_songs)
+    jophur = Jophur(songs.all_songs, config)
     jophur.replace_setlist(setlist)
     listener = Listener(threshold=600)
     state_machine = menus.menu_state_machine({
@@ -35,9 +37,9 @@ async def main():
 
     await asyncio.gather(
         asyncio.create_task(run_state_machine(state_machine, listener)),
-        asyncio.create_task(monitor_buttons(listener)),
-        asyncio.create_task(monitor_rotary_encoder(listener)),
-        asyncio.create_task(monitor_pedal(listener)),
+        asyncio.create_task(monitor_buttons(listener, config)),
+        asyncio.create_task(monitor_rotary_encoder(listener, config)),
+        asyncio.create_task(monitor_pedal(listener, config)),
     )
 
 asyncio.run(main())

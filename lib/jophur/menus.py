@@ -64,12 +64,12 @@ class main_menu(menu):
 
     def update_ui(self):
         jophur = self.jophur
-        
+
         # Update LEDs
         for i in range(0, len(jophur.button_leds)):
             jophur.button_leds[i].value = jophur.current_patch_index == i and \
                 jophur.selected_song_index == jophur.current_patch_song_index
-        
+
         jophur.text_area.text = jophur.selected_song_and_index()
 
     def enter(self, _):
@@ -86,13 +86,12 @@ class main_menu(menu):
 
         if len(listener.events) > 0:
             (event_name, event_data) = listener.events.pop(0)
-
             if event_name == KNOB:
                 if len(last_knob_events) > 3:
                     last_knob_events.remove(last_knob_events[0])
 
                 last_knob_events.append(event_data)
-                
+
                 if len(last_knob_events) > 1:
                     if (all(e == KNOB_UP for e in last_knob_events)):
                         jophur.select_next_song()
@@ -126,18 +125,18 @@ class main_menu(menu):
             if event_name == PEDAL:
                 selected_patch = jophur.current_patch_data()
                 (_, _, patch_data) = selected_patch
+                print("pedal", event_data, patch_data)
                 if patch_data.expression:
                     (exp_cc, exp_lo, exp_hi) = patch_data.expression
                     jophur.midi.junoCC(
                         exp_cc,
                         floor(lerp(event_data, exp_lo, exp_hi))
                     )
-            
+
             self.update_ui()
 
 ### BATTERY STUFF ###
-vbat_voltage = AnalogIn(board.VOLTAGE_MONITOR)
-
+# vbat_voltage = AnalogIn(board.VOLTAGE_MONITOR)
 def get_vbat_voltage(pin):
     return (pin.value * 3.3) / 65536 * 2
 
@@ -165,12 +164,14 @@ class select_menu(menu):
 
         if option == "battery":
             # Fully charge: 3.92
-            v = get_vbat_voltage(vbat_voltage)
+            # Voltage monitor not available on RP2040 ?
+            # v = get_vbat_voltage(vbat_voltage)
+            v = 1.0
             self.jophur.text_area.text = "VBat voltage: {:.2f}".format(v)
 
         if option == "display off":
             self.jophur.text_area.text = "Display off"
-        
+
         if option == "setlists":
             self.jophur.text_area.text = "Setlists"
 
@@ -204,7 +205,7 @@ class select_menu(menu):
                 if option == "display off":
                     machine.go_to_menu(BLANK)
                     return
-                
+
                 elif option == "setlists":
                     machine.go_to_menu(SETLISTS)
                     return
@@ -245,7 +246,7 @@ class setlist_menu():
         self.setlists = []
         self.selected_index = 0
         self.last_knob_events = []
-    
+
     def enter(self, _):
         self.setlists = os.listdir("setlists")
         self.selected_index = 0
@@ -291,11 +292,11 @@ class setlist_menu():
                         self.selected_index = rotate_index(len(self.setlists), self.selected_index, 1)
 
                     if (all(e == KNOB_DOWN for e in last_knob_events)):
-                        self.selected_index = rotate_index(len(self.setlists), self.selected_index, -1)                        
+                        self.selected_index = rotate_index(len(self.setlists), self.selected_index, -1)
 
                     last_knob_events.clear()
 
-                
-            
+
+
             self.update_ui()
 

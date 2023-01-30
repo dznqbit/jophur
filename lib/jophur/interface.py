@@ -19,7 +19,7 @@ class Listener:
         self.events = []
         self.last_event_at = time.monotonic()
         self.threshold = threshold
-    
+
     def clear(self):
         self.events.clear()
 
@@ -36,12 +36,12 @@ class Listener:
     def button_pressed(self, button):
         self.events.append((BUTTON, button))
         self.last_event_at = time.monotonic()
-    
+
     def expression_pedaled(self, linear_amount):
         self.events.append((PEDAL, linear_amount))
 
-async def monitor_rotary_encoder(listener):
-    encoder = rotaryio.IncrementalEncoder(board.A3, board.A4)
+async def monitor_rotary_encoder(listener, config):
+    encoder = rotaryio.IncrementalEncoder(config.rotaryEncoder1, config.rotaryEncoder2)
     position = encoder.position
     last_position = None
 
@@ -53,15 +53,15 @@ async def monitor_rotary_encoder(listener):
         last_position = position
         await asyncio.sleep(0)
 
-async def monitor_buttons(listener):
+async def monitor_buttons(listener, config):
     button_dict = {
-        board.A2: buttons.ROTARY,
-        board.D9: buttons.OLED_A,
-        board.D6: buttons.OLED_B,
-        board.D5: buttons.OLED_C,
-        board.D10: buttons.A,
-        board.D11: buttons.B,
-        board.D12: buttons.C
+        config.rotaryButton: buttons.ROTARY,
+        config.oledButtonA: buttons.OLED_A,
+        config.oledButtonB: buttons.OLED_B,
+        config.oledButtonC: buttons.OLED_C,
+        config.buttonA: buttons.A,
+        config.buttonB: buttons.B,
+        config.buttonC: buttons.C
     }
 
     button_pins = list(button_dict.keys())
@@ -79,8 +79,8 @@ async def monitor_buttons(listener):
 def get_voltage(pin):
     return (pin.value / 65536) * pin.reference_voltage
 
-async def monitor_pedal(listener):
-    pedal = AnalogIn(board.A0)
+async def monitor_pedal(listener, config):
+    pedal = AnalogIn(config.pedalAnalogIn)
     last_voltage = None
 
     # Moog exp pedal OTHER has clean signal and is linear.
@@ -91,8 +91,8 @@ async def monitor_pedal(listener):
         voltage = get_voltage(pedal)
         if last_voltage and (abs(voltage - last_voltage) > voltage_threshold):
             listener.expression_pedaled(voltage / 3.3)
-      
+
         last_voltage = voltage
-        await asyncio.sleep(0)
-    
+        await asyncio.sleep(0.005)
+
     pedal.deinit()
