@@ -7,7 +7,8 @@ jophur is a lightweight MIDI message blaster, intended to solve the problem of q
 jophur is coded in [CircuitPython](https://github.com/adafruit/circuitpython), with libraries from [Adafruit](https://github.com/adafruit/Adafruit_CircuitPython_Bundle/).
 
 ## Hardware
-Developed on the [Adafruit Feather M4 Express](https://learn.adafruit.com/adafruit-feather-m4-express-atsamd51). Theoretically any Feather Express should work.
+- [Adafruit Feather M4 Express](https://learn.adafruit.com/adafruit-feather-m4-express-atsamd51)
+- [Adafruit Feather RP2040](https://learn.adafruit.com/adafruit-feather-rp2040-pico)
 
 | [M4 Pin](https://learn.adafruit.com/adafruit-feather-m4-express-atsamd51/pinouts) | [RP2040 Pin](https://learn.adafruit.com/adafruit-feather-rp2040-pico/pinouts) | M4 Code Ref | Function |
 |-|-|-|-|
